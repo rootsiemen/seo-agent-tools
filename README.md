@@ -76,8 +76,50 @@ rankings — fix within a week) · **Medium** (fix within a month) · **Low**
 - [`agents/SKILL.md`](agents/SKILL.md) — the complete agent suite: the
   orchestrator workflow plus all 14 specialist playbooks with their full
   checklists. Drop it into your own AI assistant setup and run audits with it.
-- The live checker tools run on [Frinjo](https://frinjo.me/seo); their source
-  is being added to this repo in stages.
+- [`tools/`](tools/) — the source code of the 13 checker tools that run live
+  on Frinjo (see **Source code** below).
+
+## Source code
+
+The [`tools/`](tools/) folder holds the **exact source code of the 13 checker
+tools running live on [frinjo.me/seo](https://frinjo.me/seo)** — not a rewrite
+or a sample. (The 14th tool, Keyword Traffic Checker, predates this suite and
+lives in the main Frinjo codebase.) The folder mirrors the Next.js app layout
+the code was taken from:
+
+```
+tools/
+└── src/
+    ├── lib/
+    │   └── seo-tools.ts            — all 13 analyzers in one module: fetch,
+    │                                 parse, run the checks, score the result
+    ├── app/
+    │   ├── api/
+    │   │   └── seo-check/route.ts  — the single API route every tool page
+    │   │                             calls (GET ?url=<target>&tool=<id>)
+    │   └── <tool-slug>/page.tsx    — one page per tool, 13 in total:
+    │       technical-seo-checker/      schema-checker/
+    │       sitemap-checker/            on-page-seo-checker/
+    │       meta-tag-checker/           robots-txt-checker/
+    │       ai-readiness-checker/       image-seo-checker/
+    │       local-seo-checker/          backlink-checker/
+    │       competitor-checker/         internal-link-checker/
+    │       content-brief-generator/
+    └── components/
+        └── SeoToolRunner.tsx       — the shared client component: URL form,
+                                      run state, and the scored results list
+```
+
+How a check runs end to end: a tool page renders `SeoToolRunner` with its tool
+id; the runner calls `/api/seo-check`, which hands the target URL to the
+matching analyzer in `seo-tools.ts`. The analyzer fetches the page itself
+(server-side, with SSRF guards and a response-size cap), runs its checklist
+against the real HTML/headers, and returns pass/warn/fail findings plus a
+0–100 score — the same findings format the agent suite uses.
+
+To reuse it, lift `tools/src/` into any Next.js App Router project: the only
+runtime dependencies are Next.js itself and the shared UI primitives the
+pages import.
 
 ## Built by
 
